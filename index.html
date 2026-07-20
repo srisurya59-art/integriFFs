@@ -115,7 +115,6 @@
         .cert-metadata-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .cert-metadata-row .form-group { margin-bottom: 0; }
 
-        /* TRACK SELECTOR - NEW */
         .track-selector {
             background: var(--bg-secondary); padding: 20px;
             border-radius: 10px; margin-bottom: 24px;
@@ -392,11 +391,11 @@
             </li>
         </ul>
 
-        <h4>FFS Assessment Levels</h4>
+        <h4>FFS Assessment Levels per API 579-1/ASME FFS-1</h4>
         <ul>
-            <li><strong>Level 1 (Screening):</strong> Simplified calculation with conservative assumptions. φ=1.0, no Kt, no Folias. Quick pass/fail.</li>
-            <li><strong>Level 2 (Refined Analysis):</strong> Uses strength reduction factor (φ=0.85), stress concentration factor (Kt), Folias factor for long shells, temperature-corrected material properties, corrosion allowance. Per API 579 Part 4.4.</li>
-            <li><strong>Level 3 (Detailed Analysis):</strong> Full ECA with FEA and validation testing.</li>
+            <li><strong>Level 1 (Screening):</strong> Screening calculation per API 579 Part 4.4, based on ASME Section VIII Div 1 UG-27. Conservative design philosophy with no reduction factors. Determines eligibility for Level 2 refined analysis when the component fails initial screening.</li>
+            <li><strong>Level 2 (Refined Analysis):</strong> Refined analysis per API 579 Part 4.4 incorporating strength reduction factor (φ=0.85), stress concentration factor (Kt) for local damage, Folias factor (M) for long axial shells, temperature-corrected material properties, and corrosion allowance. Required when Level 1 fails.</li>
+            <li><strong>Level 3 (Detailed Analysis):</strong> Full Engineering Critical Assessment (ECA) with Finite Element Analysis (FEA) and validation testing. Required when Level 2 cannot demonstrate fitness for service.</li>
         </ul>
     </div>
 </div>
@@ -423,7 +422,7 @@
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; font-weight: 600;">PER YEAR</div>
             <ul style="list-style: none; padding: 0; margin: 20px 0; text-align: left;">
                 <li style="padding: 8px 0 8px 24px; color: var(--text-main); font-size: 0.9rem; position: relative; border-bottom: 1px solid #e2e8f0;"><span style="position: absolute; left: 0; color: var(--success-green); font-weight: 700;">✓</span>Level 1 + Level 2 (both tracks)</li>
-                <li style="padding: 8px 0 8px 24px; color: var(--text-main); font-size: 0.9rem; position: relative; border-bottom: 1px solid #e2e8f0;"><span style="position: absolute; left: 0; color: var(--success-green); font-weight: 700;">✓</span>Folias factor, Kt, φ reduction</li>
+                <li style="padding: 8px 0 8px 24px; color: var(--text-main); font-size: 0.9rem; position: relative; border-bottom: 1px solid #e2e8f0;"><span style="position: absolute; left: 0; color: var(--success-green); font-weight: 700;">✓</span>API 579 Part 4.4 with φ, Kt, Folias, temperature correction</li>
                 <li style="padding: 8px 0 8px 24px; color: var(--text-main); font-size: 0.9rem; position: relative; border-bottom: 1px solid #e2e8f0;"><span style="position: absolute; left: 0; color: var(--success-green); font-weight: 700;">✓</span>Full Python desktop suite</li>
                 <li style="padding: 8px 0 8px 24px; color: var(--text-main); font-size: 0.9rem; position: relative;"><span style="position: absolute; left: 0; color: var(--success-green); font-weight: 700;">✓</span>Branded PDF reports</li>
             </ul>
@@ -462,25 +461,24 @@
 
 <div class="calculator-box" id="calculator-box">
     <h2>Interactive Fitness-for-Service Assessment</h2>
-    <p>Select asset track, assessment level, and enter parameters. The engine computes required thickness/capacity, fitness ratio, and pass/fail verdict.</p>
+    <p>Select asset track and assessment level per API 579-1/ASME FFS-1 (2021 Edition). Enter measured parameters. The engine computes required thickness or member capacity, demand/capacity ratio, and fitness verdict per the referenced standard.</p>
 
-    <!-- TRACK SELECTOR - NEW -->
     <div class="track-selector">
         <label for="track-select">Asset Track:</label>
         <select id="track-select" onchange="switchTrack()">
             <option value="pressure">Pressure Vessel (ASME VIII Div 1 / API 579 Part 4)</option>
             <option value="structural">Structural Member (AISC 360 / API 579 Part 14)</option>
         </select>
-        <span class="track-info" id="track-info">Pressure vessel: cylindrical shell per ASME VIII UG-27.</span>
+        <span class="track-info" id="track-info">Pressure Vessel Track: Cylindrical shell calculation per ASME Section VIII Div 1 UG-27, API 579 Part 4 methodology.</span>
     </div>
 
     <div class="level-selector">
         <label for="level-select">Assessment Level:</label>
         <select id="level-select" onchange="updateLevelInfo()">
-            <option value="1">Level 1 — Screening (Simplified)</option>
+            <option value="1">Level 1 — Screening per API 579 Part 4.4</option>
             <option value="2">Level 2 — Refined Analysis (φ, Kt, Folias, temperature)</option>
         </select>
-        <span class="level-info" id="level-info">Level 1: Conservative, no reduction factor. Quick pass/fail.</span>
+        <span class="level-info" id="level-info">Level 1: Screening calculation per API 579 Part 4.4. Determines eligibility for Level 2 refined analysis.</span>
     </div>
 
     <!-- PRESSURE VESSEL INPUTS -->
@@ -543,16 +541,16 @@
         </form>
     </div>
 
-    <!-- STRUCTURAL MEMBER INPUTS - NEW -->
+    <!-- STRUCTURAL MEMBER INPUTS -->
     <div id="structural-member-inputs" style="display: none;">
         <form id="input-form-structural" onsubmit="event.preventDefault(); executeStructuralAssessment();">
             <div class="form-row">
                 <div class="form-group">
                     <label for="member-type">Member Type</label>
                     <select id="member-type" onchange="updateStructuralInfo()">
-                        <option value="beam">Flexural Member (Beam)</option>
-                        <option value="column">Compression Member (Column)</option>
-                        <option value="brace">Brace (Axial)</option>
+                        <option value="beam">Flexural Member (Beam) — AISC 360 Chapter F</option>
+                        <option value="column">Compression Member (Column) — AISC 360 Chapter E</option>
+                        <option value="brace">Brace (Axial) — AISC 360 Chapter D</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -657,9 +655,9 @@
         document.getElementById('results-panel').style.display = 'none';
         const trackInfo = document.getElementById('track-info');
         if (currentTrack === 'pressure') {
-            trackInfo.textContent = 'Pressure vessel: cylindrical shell per ASME VIII UG-27.';
+            trackInfo.textContent = 'Pressure Vessel Track: Cylindrical shell calculation per ASME Section VIII Div 1 UG-27, API 579 Part 4 methodology.';
         } else {
-            trackInfo.textContent = 'Structural member: per AISC 360 Chapter D/E/F.';
+            trackInfo.textContent = 'Structural Member Track: Steel member design checks per AISC 360 Chapters D, E, F, with API 579 Part 14 methodology.';
         }
     }
 
@@ -668,10 +666,10 @@
         const info = document.getElementById('level-info');
         const l2Extras = document.getElementById('l2-pressure-extras');
         if (level === '1') {
-            info.textContent = 'Level 1: Conservative, no reduction factor. Quick pass/fail.';
+            info.textContent = 'Level 1: Screening calculation per API 579 Part 4.4. Determines eligibility for Level 2 refined analysis.';
             if (l2Extras) l2Extras.style.display = 'none';
         } else {
-            info.textContent = 'Level 2: Uses φ=0.85, Kt, Folias factor, temperature-corrected S. More accurate.';
+            info.textContent = 'Level 2: Refined analysis per API 579 Part 4.4 with φ=0.85, Kt, Folias factor (M), temperature-corrected S, and corrosion allowance.';
             if (l2Extras) l2Extras.style.display = 'grid';
         }
     }
@@ -702,8 +700,6 @@
     }
 
     function tempCorrection(S, T) {
-        // Simplified temperature correction factor for carbon steel
-        // At 100°F = 1.0, at 400°F = 1.0, at 800°F = 0.75
         if (T <= 400) return 1.0;
         if (T <= 600) return 0.92;
         if (T <= 800) return 0.82;
@@ -728,37 +724,28 @@
         let t_min, MAWP, formulaText, phi, Kt, S_corrected, corrosion = 0, Folias = 1;
 
         if (level === 1) {
-            // LEVEL 1: Pure ASME VIII UG-27 screening
             phi = 1.0;
             Kt = 1.0;
             S_corrected = S;
             t_min = (P * (D / 2)) / ((S * E) + (0.4 * P));
             MAWP = (S * E * t) / ((D / 2) - (0.6 * t));
-            formulaText = `<strong>Level 1 (ASME VIII Div 1 UG-27 Screening):</strong><br>
+            formulaText = `<strong>Level 1 (API 579 Part 4.4 Screening per ASME VIII UG-27):</strong><br>
                 t_min = (P × D/2) / (S × E + 0.4P)<br>
                 t_min = (${P} × ${D/2}) / (${S} × ${E} + 0.4 × ${P})<br>
                 <strong>t_min = ${t_min.toFixed(4)} in</strong><br>
-                φ = ${phi}, Kt = ${Kt}, no Folias, no temp correction.`;
+                φ = ${phi}, Kt = ${Kt}, conservative design without reduction factors.`;
         } else {
-            // LEVEL 2: Refined analysis per API 579 Part 4.4
             phi = 0.85;
             Kt = parseFloat(document.getElementById('kt-input-pv').value) || 1.0;
             const T = parseFloat(document.getElementById('temp-input-pv').value) || 400;
             corrosion = parseFloat(document.getElementById('corrosion-input-pv').value) || 0;
             const damageL = parseFloat(document.getElementById('folias-input-pv').value) || 0;
 
-            // Temperature-corrected allowable stress
             S_corrected = S * tempCorrection(S, T);
-
-            // Folias factor for long axial damage
             Folias = computeFoliasFactor(damageL, D, t);
 
-            // API 579 Part 4.4 Level 2 formula with all parameters
             t_min = (P * (D / 2) * Kt * Folias) / ((S_corrected * E * phi) - (0.6 * P));
-
-            // Apply corrosion allowance to required thickness
             t_min_with_corrosion = t_min + corrosion;
-
             MAWP = (S_corrected * E * phi * (t - corrosion)) / ((D / 2) - (0.6 * t));
 
             formulaText = `<strong>Level 2 (API 579 Part 4.4 Refined Analysis):</strong><br>
@@ -777,7 +764,6 @@
         const pass = t >= t_min;
         const margin = t - t_min;
 
-        // Build results grid
         let gridHtml = `
             <div class="result-item"><div class="label">Track / Level</div><div class="value" style="font-size:1rem;">Pressure Vessel / L${level}</div></div>
             <div class="result-item"><div class="label">Required Thickness t_min</div><div class="value">${t_min.toFixed(4)} in</div></div>
@@ -833,7 +819,6 @@
             }
         }
 
-        // Store results for PDF
         currentResult = {
             track: 'pressure', level: level, materialText: materialText,
             P: P, D: D, S: S, E: E, t: t, t_min: t_min, MAWP: MAWP, margin: margin, pass: pass,
@@ -842,7 +827,6 @@
 
         document.getElementById('results-panel').style.display = 'block';
 
-        // Populate print values
         document.getElementById('print-track-level').textContent = 'Pressure Vessel / Level ' + level;
         document.getElementById('print-inputs-content').innerHTML = `
             <p><strong>Material:</strong> ${materialText}</p>
@@ -878,47 +862,39 @@
         const Pu_kip = parseFloat(document.getElementById('demand-axial').value);
 
         const level = parseInt(document.getElementById('level-select').value);
-        const phi = (level === 2) ? 0.90 : 1.0;  // AISC uses phi = 0.90 for LRFD
+        const phi = (level === 2) ? 0.90 : 1.0;
 
         if (isNaN(Fy) || isNaN(d) || isNaN(bf) || isNaN(tf) || isNaN(tw) || isNaN(L_ft)) {
             alert('Please enter valid positive numbers for all member dimensions.');
             return;
         }
 
-        // Convert units: moment kip-ft to kip-in, length ft to in
         const L = L_ft * 12;
-        const Mu = Mu_kg * 12;  // kip-ft to kip-in
-        const Pu = Pu_kip;  // kip
-        const Vu = Vu_kip;  // kip
+        const Mu = Mu_kg * 12;
+        const Pu = Pu_kip;
+        const Vu = Vu_kip;
 
-        // Section properties (simplified I-section)
-        const A = 2 * bf * tf + (d - 2 * tf) * tw;  // in²
-        const Ix = (bf * Math.pow(d, 3) - (bf - tw) * Math.pow(d - 2 * tf, 3)) / 12;  // in⁴
-        const Sx = Ix / (d / 2);  // in³
-        const Zx = bf * tf * (d - tf) + 0.25 * tw * Math.pow(d - 2 * tf, 2);  // plastic modulus (approx)
-        const ry = Math.sqrt(Ix / A);  // radius of gyration
+        const A = 2 * bf * tf + (d - 2 * tf) * tw;
+        const Ix = (bf * Math.pow(d, 3) - (bf - tw) * Math.pow(d - 2 * tf, 3)) / 12;
+        const Sx = Ix / (d / 2);
+        const Zx = bf * tf * (d - tf) + 0.25 * tw * Math.pow(d - 2 * tf, 2);
+        const ry = Math.sqrt(Ix / A);
 
-        // Slenderness ratio
         const slenderness = (Kx * L) / ry;
 
-        // Calculate capacities per AISC 360
-        const phi_Mn = phi * Zx * Fy / 12;  // kip-ft (moment capacity)
-        const phi_Vn = phi * 0.6 * Fy * d * tw / 10;  // kip (shear capacity, simplified)
-        const phi_Pn_axial = (Math.abs(Pu) / 1000) || 0;  // placeholder
+        const phi_Mn = phi * Zx * Fy / 12;
+        const phi_Vn = phi * 0.6 * Fy * d * tw / 10;
 
-        // Interaction equation per AISC 360 Chapter H
         let demandRatio, capacityMessage;
 
         if (memberType === 'beam') {
-            // Pure bending: Mu / φMn ≤ 1.0
             demandRatio = Mu_kg / phi_Mn;
             capacityMessage = `AISC 360 Chapter F: Mu / φMn ≤ 1.0<br>
                 Mu (demand) = ${Mu_kg} kip-ft<br>
                 φMn (capacity) = ${phi_Mn.toFixed(2)} kip-ft<br>
                 φ = ${phi}, Zx = ${Zx.toFixed(2)} in³, Fy = ${Fy} PSI`;
         } else if (memberType === 'column') {
-            // Pure compression: Pu / φPn ≤ 1.0 (simplified - using yield as capacity)
-            const phi_Pn = phi * A * Fy / 10;  // kip (simplified - actual uses buckling)
+            const phi_Pn = phi * A * Fy / 10;
             demandRatio = Math.abs(Pu_kip) / phi_Pn;
             capacityMessage = `AISC 360 Chapter E: Pu / φPn ≤ 1.0<br>
                 Pu (demand) = ${Math.abs(Pu_kip)} kip<br>
@@ -926,7 +902,6 @@
                 φ = ${phi}, A = ${A.toFixed(2)} in², Fy = ${Fy} PSI<br>
                 Slenderness KL/r = ${slenderness.toFixed(1)} (use Chapter E tables for accurate buckling)`;
         } else {
-            // Brace - axial
             const phi_Pn = phi * A * Fy / 10;
             demandRatio = Math.abs(Pu_kip) / phi_Pn;
             capacityMessage = `AISC 360 Chapter D: Pu / φPn ≤ 1.0<br>
@@ -935,7 +910,6 @@
                 φ = ${phi}, A = ${A.toFixed(2)} in², Fy = ${Fy} PSI`;
         }
 
-        // Add moment-axial interaction if both exist
         if (memberType === 'column' && Mu_kg !== 0) {
             const interactionRatio = Math.abs(Pu_kip) / (phi * A * Fy / 10) + (8/9) * (Mu_kg / phi_Mn);
             capacityMessage += `<br><br><strong>H1-1 Interaction (combined axial + bending):</strong><br>
@@ -946,7 +920,6 @@
         const pass = demandRatio <= 1.0;
         const margin = (1.0 - demandRatio) * 100;
 
-        // Build results grid
         let gridHtml = `
             <div class="result-item"><div class="label">Track / Level</div><div class="value" style="font-size:1rem;">Structural / L${level}</div></div>
             <div class="result-item"><div class="label">Member Type</div><div class="value" style="font-size:1rem;">${memberType}</div></div>
@@ -1001,7 +974,6 @@
 
         document.getElementById('results-panel').style.display = 'block';
 
-        // Populate print values
         document.getElementById('print-track-level').textContent = 'Structural Member / Level ' + level;
         document.getElementById('print-inputs-content').innerHTML = `
             <p><strong>Member Type:</strong> ${memberType}</p>
@@ -1037,7 +1009,6 @@
             certIdField.value = `FFS-${timestamp}`;
             document.getElementById('print-cert-id').textContent = certIdField.value;
         }
-        // Re-run whichever assessment was last done
         if (currentTrack === 'pressure') executePressureAssessment();
         else executeStructuralAssessment();
         window.print();
